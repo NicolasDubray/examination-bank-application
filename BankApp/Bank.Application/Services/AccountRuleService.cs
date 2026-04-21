@@ -1,3 +1,5 @@
+using System.Data;
+
 using Bank.Domain.Enums;
 using Bank.Domain.Interfaces;
 using Bank.Domain.Rules;
@@ -26,13 +28,14 @@ public class AccountRuleService
     public decimal GetMonthlyFee(AccountType accountType)
     {
         var rule = _ruleFactory.CreateRule(accountType);
-        return 0;
+        return rule.GetMonthlyFee();
     }
 
     // MISSING_TARGET: GetWithdrawalLimit
     public decimal GetWithdrawalLimit(AccountType accountType)
     {
-        throw new NotImplementedException();
+        var rule = _ruleFactory.CreateRule(accountType);
+        return rule.GetWithdrawalLimit();
     }
 
     // BUG_TARGET: CalculateMonthlyFees
@@ -84,14 +87,26 @@ public class AccountRuleService
             throw new InvalidOperationException("Account not found.");
 
         var rule = _ruleFactory.CreateRule(account.AccountType);
-        var rate = rule.GetMonthlyFee();
-        var fee = rule.GetAnnualInterestRate();
+        var rate = rule.GetAnnualInterestRate();
+        var fee = rule.GetMonthlyFee();
         return $"{account.AccountNumber} ({account.AccountType}): Saldo={account.Balance:F2}, Ränta={rate:F2}%, Avgift={fee:F2}";
     }
 
     // MISSING_TARGET: CalculateCompoundInterest
     public decimal CalculateCompoundInterest(int accountId, decimal annualRate, int months)
     {
-        throw new NotImplementedException();
+        var account = _accountRepository.GetById(accountId);
+        if (account == null)
+            throw new InvalidOperationException("Account not found.");
+
+        if (annualRate == 0)
+            return 0;
+
+        var monthlyRate = annualRate / 12m / 100m;
+        var compoundFactor = 1m;
+        for (int i = 0; i < months; ++i)
+            compoundFactor *= 1m + monthlyRate;
+
+        return account.Balance * compoundFactor;
     }
 }

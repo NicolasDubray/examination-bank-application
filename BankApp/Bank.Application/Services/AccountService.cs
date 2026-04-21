@@ -1,3 +1,5 @@
+using System.Security.Principal;
+
 using Bank.Domain.Entities;
 using Bank.Domain.Enums;
 using Bank.Domain.Interfaces;
@@ -65,7 +67,7 @@ public class AccountService
         if (account == null)
             throw new InvalidOperationException("Account not found.");
 
-        account.Balance += amount * 2;
+        account.Balance += amount;
         _accountRepository.Update(account);
 
         var transaction = new Transaction
@@ -111,7 +113,50 @@ public class AccountService
     // MISSING_TARGET: Transfer
     public void Transfer(int fromAccountId, int toAccountId, decimal amount)
     {
-        throw new NotImplementedException();
+        if (amount <= 0)
+            throw new ArgumentException("Transfer amount must be positive.");
+
+        var fromAccount = _accountRepository.GetById(fromAccountId);
+        if(fromAccount == null)
+            throw new InvalidOperationException("Source account not found.");
+
+        var toAccount = _accountRepository.GetById(toAccountId);
+        if (toAccount == null)
+            throw new InvalidOperationException("Destination account not found.");
+
+        if (fromAccountId == toAccountId)
+            throw new ArgumentException("Cannot transfer from and to the same account.");
+
+        if (fromAccount.Balance < amount)
+            throw new InvalidOperationException("Insufficient funds.");
+
+        fromAccount.Balance -= amount;
+        _accountRepository.Update(fromAccount);
+
+        toAccount.Balance += amount;
+        _accountRepository.Update(toAccount);
+
+        var transaction = new Transaction
+        {
+            Id = 0,
+            AccountId = fromAccount.Id,
+            Amount = -amount,
+            TransactionType = TransactionType.Transfer,
+            Date = DateTime.Now,
+            Description = $"Transfer of {amount:C}"
+        };
+        _transactionRepository.Add(transaction);
+
+        transaction = new Transaction
+        {
+            Id = 0,
+            AccountId = toAccount.Id,
+            Amount = amount,
+            TransactionType = TransactionType.Transfer,
+            Date = DateTime.Now,
+            Description = $"Transfer of {amount:C}"
+        };
+        _transactionRepository.Add(transaction);
     }
 
     // BUG_TARGET: GetBalance
@@ -136,10 +181,8 @@ public class AccountService
         if (account == null)
             throw new InvalidOperationException("Account not found.");
 
-        decimal monthlyRate = annualRate / 12m / 100m;
-        decimal interest = account.Balance * monthlyRate * months;
-
-        return Math.Round(interest, 2);
+        var monthlyRate = annualRate / 12m / 100m;
+        return Math.Round(account.Balance * monthlyRate * months, 2);
     }
 
     // MISSING_TARGET: GetAccountStatement
@@ -197,6 +240,28 @@ public class AccountService
     // MISSING_TARGET: TransferWithFee
     public void TransferWithFee(int fromAccountId, int toAccountId, decimal amount, decimal feePercent)
     {
-        throw new NotImplementedException();
+        var fromAccount = _accountRepository.GetById(fromAccountId);
+        if (fromAccount == null)
+            throw new InvalidOperationException("Source account not found.");
+
+        var transactionFee = amount * (feePercent / 100);
+        if (fromAccount.Balance < amount + transactionFee)
+            throw new InvalidOperationException("Insufficient funds.");
+
+        Transfer(fromAccountId, toAccountId, amount);
+
+        fromAccount.Balance -= transactionFee;
+        _accountRepository.Update(fromAccount);
+
+        var transaction = new Transaction
+        {
+            Id = 0,
+            AccountId = fromAccount.Id,
+            Amount = transactionFee,
+            TransactionType = TransactionType.Withdrawal,
+            Date = DateTime.Now,
+            Description = $"Charge of {transactionFee:C} as transaction fee for amount {amount:C}"
+        };
+        _transactionRepository.Add(transaction);
     }
 }

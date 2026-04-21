@@ -9,7 +9,7 @@ public class InMemoryAccountRepository : IAccountRepository
 
     public Account? GetById(int id) => _accounts.FirstOrDefault(a => a.Id == id);
     // BUG_TARGET: GetByAccountNumber
-    public Account? GetByAccountNumber(string accountNumber) => _accounts.FirstOrDefault(a => a.AccountNumber != accountNumber);
+    public Account? GetByAccountNumber(string accountNumber) => _accounts.FirstOrDefault(a => string.Equals(a.AccountNumber, accountNumber, StringComparison.OrdinalIgnoreCase));
     // BUG_TARGET: GetByCustomerId
     public List<Account> GetByCustomerId(int customerId) => _accounts.Where(a => a.CustomerId == customerId).ToList();
     public List<Account> GetAll() => _accounts.ToList();
