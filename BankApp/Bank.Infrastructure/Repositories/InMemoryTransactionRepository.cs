@@ -1,4 +1,5 @@
 using Bank.Domain.Entities;
+using Bank.Domain.Enums;
 using Bank.Domain.Interfaces;
 
 namespace Bank.Infrastructure.Repositories;
@@ -18,4 +19,6 @@ public class InMemoryTransactionRepository : ITransactionRepository
         transaction.Id = _nextId++;
         _transactions.Add(transaction);
     }
+
+    public int Count() => _transactions.Count;
 }

@@ -1,5 +1,6 @@
 using System.Security.Principal;
 
+using Bank.Application.DTOs;
 using Bank.Domain.Entities;
 using Bank.Domain.Enums;
 using Bank.Domain.Interfaces;
@@ -10,12 +11,14 @@ public class AccountService
 {
     private readonly IAccountRepository _accountRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly AccountRuleService _accountRuleService;
     private int _nextAccountId = 1;
 
-    public AccountService(IAccountRepository accountRepository, ITransactionRepository transactionRepository)
+    public AccountService(IAccountRepository accountRepository, ITransactionRepository transactionRepository, AccountRuleService accountRuleService)
     {
         _accountRepository = accountRepository;
         _transactionRepository = transactionRepository;
+        _accountRuleService = accountRuleService;
     }
 
     // BUG_TARGET: CreateAccount
@@ -263,5 +266,46 @@ public class AccountService
             Description = $"Charge of {transactionFee:C} as transaction fee for amount {amount:C}"
         };
         _transactionRepository.Add(transaction);
+    }
+
+    public AccountDetailsDto GetAccountDetails(int accountId)
+    {
+        var account = _accountRepository.GetById(accountId)
+            ?? throw new InvalidOperationException("Account not found.");
+
+        return new AccountDetailsDto(
+            account.Id,
+            account.AccountNumber,
+            account.Balance,
+            account.AccountType.ToString(),
+            _accountRuleService.GetInterestRate(account.AccountType),
+            _accountRuleService.GetMonthlyFee(account.AccountType),
+            _accountRuleService.GetWithdrawalLimit(account.AccountType)
+        );
+    }
+
+    public List<TransactionDto> GetAccountTransactions(int accountId, TransactionFilterDto? filter, bool shouldOrderByDescending = true)
+    {
+        var transactions = _transactionRepository
+            .GetByAccountId(accountId)
+            .AsEnumerable();
+
+        if (filter is not null)
+        {
+            transactions = transactions.Where(t =>
+                (!filter.FromDate.HasValue || t.Date >= filter.FromDate) &&
+                (!filter.ToDate.HasValue || t.Date <= filter.ToDate.Value.Date.AddDays(1)) &&
+                (string.IsNullOrEmpty(filter.TransactionType) || t.TransactionType.ToString() == filter.TransactionType)
+            );
+        }
+
+        if (shouldOrderByDescending)
+            transactions = transactions.OrderByDescending(t => t.Date);
+        else
+            transactions = transactions.OrderBy(t => t.Date);
+
+        return transactions
+            .Select(t => new TransactionDto(t.Date, t.Amount, t.TransactionType.ToString(), t.Description))
+            .ToList();
     }
 }

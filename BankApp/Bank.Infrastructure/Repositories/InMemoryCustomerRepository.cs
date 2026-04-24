@@ -18,4 +18,6 @@ public class InMemoryCustomerRepository : ICustomerRepository
         if (index >= 0)
             _customers[index] = customer;
     }
+
+    public int Count() => _customers.Count;
 }

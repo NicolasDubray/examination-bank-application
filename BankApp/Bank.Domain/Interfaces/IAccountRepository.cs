@@ -10,4 +10,5 @@ public interface IAccountRepository
     List<Account> GetAll();
     void Add(Account account);
     void Update(Account account);
+    int Count();
 }

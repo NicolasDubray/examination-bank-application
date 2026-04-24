@@ -1,0 +1,30 @@
+﻿@page "/select-customer"
+@inject CustomerService CustomerService
+@inject NavigationManager Nav
+
+<h3>Select Customer</h3>
+
+<ul class="customer-list">
+    @foreach (var c in customers)
+    {
+        <li>
+            <button @onclick="() => Select(c.Id)">
+                @c.FullName
+            </button>
+        </li>
+    }
+</ul>
+
+@code {
+    private List<CustomerSelectionDto> customers = new();
+
+    protected override void OnInitialized()
+    {
+        customers = CustomerService.GetCustomerSelections();
+    }
+
+    private void Select(int id)
+    {
+        Nav.NavigateTo($"/portal/{id}");
+    }
+}

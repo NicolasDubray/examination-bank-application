@@ -1,3 +1,4 @@
+using Bank.Application.DTOs;
 using Bank.Domain.Entities;
 using Bank.Domain.Interfaces;
 
@@ -84,5 +85,31 @@ public class CustomerService
         var typeStr = typeSummary.Count > 0 ? string.Join(", ", typeSummary) : "Inga konton";
 
         return $"{customer.FullName}: {accounts.Count} konton ({typeStr}), Totalt saldo: {totalBalance:F2}";
+    }
+
+    public List<CustomerSelectionDto> GetCustomerSelections()
+    {
+        return _customerRepository.GetAll()
+            .Select(c => new CustomerSelectionDto(c.Id, c.FullName))
+            .ToList();
+    }
+
+    public CustomerOverviewDto GetCustomerOverview(int customerId)
+    {
+        var customer = _customerRepository.GetById(customerId)
+            ?? throw new InvalidOperationException("Customer not found.");
+
+        var accounts = _accountRepository.GetByCustomerId(customerId);
+
+        return new CustomerOverviewDto(
+            customer.Id,
+            customer.FullName,
+            accounts.Select(a => new AccountSummaryDto(
+                a.Id,
+                a.AccountNumber,
+                a.AccountType.ToString(),
+                a.Balance
+            )).ToList()
+        );
     }
 }

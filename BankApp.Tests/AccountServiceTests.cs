@@ -2,8 +2,10 @@
 // Generated: 2026-04-02
 // Domain: Bank
 
+using Bank.Application.DTOs;
 using Bank.Application.Services;
 using Bank.Domain.Enums;
+using Bank.Infrastructure.Factories;
 using Bank.Infrastructure.Repositories;
 
 namespace Bank.Tests;
@@ -14,7 +16,9 @@ public class AccountServiceTests
     {
         accountRepo = new InMemoryAccountRepository();
         transactionRepo = new InMemoryTransactionRepository();
-        return new AccountService(accountRepo, transactionRepo);
+        var accountRuleFactory = new AccountRuleFactory();
+        var accountRuleService = new AccountRuleService(accountRuleFactory, accountRepo);
+        return new AccountService(accountRepo, transactionRepo, accountRuleService);
     }
 
     [Fact]
@@ -313,5 +317,97 @@ public class AccountServiceTests
 
         var sourceAccount = service.GetAccountsByCustomer(1).First();
         Assert.True(sourceAccount.Balance < 500m);
+    }
+
+    [Fact]
+    public void GetAccountDetails_ExistingAccount_ReturnsAccountDetails()
+    {
+        var service = CreateService(out _, out _);
+        var account = service.CreateAccount(1, AccountType.Savings, "ACC-001");
+        service.Deposit(account.Id, 1000m);
+
+        var result = service.GetAccountDetails(account.Id);
+
+        Assert.NotNull(result);
+        Assert.Equal(account.Id, result.Id);
+        Assert.Equal("ACC-001", result.AccountNumber);
+        Assert.Equal(AccountType.Savings.ToString(), result.AccountType);
+        Assert.Equal(1000m, result.Balance);
+        Assert.True(result.WithdrawalLimit >= 0);
+    }
+
+    [Fact]
+    public void GetAccountTransactions_NoFilter_ReturnsTransactionsInDescendingOrder()
+    {
+        var service = CreateService(out _, out _);
+        var account = service.CreateAccount(1, AccountType.Savings, "ACC-001");
+        service.Deposit(account.Id, 1000m);
+        service.Withdraw(account.Id, 500m);
+
+        var result = service.GetAccountTransactions(account.Id, null, true);
+
+        Assert.Equal(2, result.Count);
+        Assert.True(result.First().Date >= result.Last().Date);
+        Assert.Contains(result, t => t.Amount == 1000m);
+        Assert.Contains(result, t => t.Amount == 500m);
+        Assert.All(result, t =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(t.Description));
+            Assert.False(string.IsNullOrWhiteSpace(t.Type));
+            Assert.NotEqual(0m, t.Amount);
+        });
+        Assert.Contains(result, t => t.Type == "Deposit");
+        Assert.Contains(result, t => t.Type == "Withdrawal");
+    }
+
+    [Fact]
+    public void GetAccountTransactions_FilterByType_ReturnsOnlyDeposits()
+    {
+        var service = CreateService(out _, out _);
+        var account = service.CreateAccount(1, AccountType.Savings, "ACC-001");
+        service.Deposit(account.Id, 1000m);
+        service.Withdraw(account.Id, 500m);
+        service.Deposit(account.Id, 200m);
+
+        var filter = new TransactionFilterDto(null, null, "Deposit");
+        var result = service.GetAccountTransactions(account.Id, filter, true);
+
+        Assert.Equal(2, result.Count);
+        Assert.All(result, t => Assert.Equal("Deposit", t.Type));
+    }
+
+    [Fact]
+    public void GetAccountTransactions_DateRangeFilter_ReturnsTransactionsInDescendingOrder()
+    {
+        var service = CreateService(out _, out var transactionRepo);
+        var account = service.CreateAccount(1, AccountType.Savings, "ACC-001");
+        service.Deposit(account.Id, 1000m);
+        service.Withdraw(account.Id, 500m);
+
+        var all = transactionRepo.GetByAccountId(account.Id);
+        var from = all.Min(t => t.Date).AddSeconds(1);
+        var to = all.Max(t => t.Date).AddSeconds(-1);
+        var filter = new TransactionFilterDto(from, to, null);
+        var result = service.GetAccountTransactions(account.Id, filter, true);
+
+        Assert.True(result.Count <= 2);
+        Assert.All(result, t =>
+        {
+            Assert.True(t.Date >= from);
+            Assert.True(t.Date <= to);
+        });
+    }
+
+    [Fact]
+    public void GetAccountTransactions_ReturnsAscendingOrder_WhenSpecified()
+    {
+        var service = CreateService(out _, out _);
+        var account = service.CreateAccount(1, AccountType.Savings, "ACC-001");
+        service.Deposit(account.Id, 1000m);
+        service.Withdraw(account.Id, 500m);
+
+        var result = service.GetAccountTransactions(account.Id, null, false);
+
+        Assert.True(result.First().Date <= result.Last().Date);
     }
 }
