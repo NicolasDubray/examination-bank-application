@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BankApp\Bank.Application\Bank.Application.csproj" />
+    <ProjectReference Include="..\BankApp\Bank.Domain\Bank.Domain.csproj" />
+    <ProjectReference Include="..\BankApp\Bank.Infrastructure\Bank.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

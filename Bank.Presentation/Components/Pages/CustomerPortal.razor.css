@@ -1,0 +1,89 @@
+﻿.accounts-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+        padding: 0.625rem 0.75rem;
+        border-bottom: 1px solid gainsboro;
+    }
+
+    th {
+        text-align: left;
+        background-color: whitesmoke;
+    }
+
+    .account-row:hover {
+        background-color: aliceblue;
+        cursor: pointer;
+    }
+
+    .account-row.selected {
+        background-color: lightsteelblue;
+        font-weight: 500;
+    }
+}
+
+.account-details-card {
+    display: inline-block;
+    border: 1px solid lightgray;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: whitesmoke;
+    margin-top: 0.75rem;
+
+    .detail-row {
+        display: grid;
+        grid-template-columns: 10rem 1fr;
+        column-gap: 1.5rem;
+        padding: 0.375rem 0;
+        border-bottom: 1px solid gainsboro;
+
+        :last-child {
+            border-bottom: none;
+        }
+    }
+
+    .label {
+        font-weight: bold;
+        color: dimgray;
+    }
+
+    .data {
+        text-align: right;
+    }
+}
+
+.transaction-filter-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    align-items: center;
+}
+
+.transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.625rem;
+
+    th,
+    td {
+        border: 1px solid silver;
+        padding: 0.5rem;
+    }
+
+    th {
+        background-color: whitesmoke;
+        text-align: left;
+    }
+
+    .amount {
+        text-align: right;
+    }
+}
+
+.amount {
+    font-family: monospace;
+    font-variant-numeric: tabular-nums;
+}

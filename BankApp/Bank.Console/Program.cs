@@ -1,5 +1,6 @@
 ﻿using Bank.Application.Services;
 using Bank.Domain.Enums;
+using Bank.Infrastructure.Factories;
 using Bank.Infrastructure.Repositories;
 
 namespace Bank.Console;
@@ -12,8 +13,10 @@ public class Program
         var accountRepo = new InMemoryAccountRepository();
         var transactionRepo = new InMemoryTransactionRepository();
 
+        var accountRuleFactory = new AccountRuleFactory();
+        var accountRuleService = new AccountRuleService(accountRuleFactory, accountRepo);
         var customerService = new CustomerService(customerRepo, accountRepo);
-        var accountService = new AccountService(accountRepo, transactionRepo);
+        var accountService = new AccountService(accountRepo, transactionRepo, accountRuleService);
         var transactionService = new TransactionService(transactionRepo);
 
         bool running = true;

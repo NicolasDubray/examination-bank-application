@@ -1,4 +1,5 @@
 using Bank.Domain.Entities;
+using Bank.Domain.Enums;
 using Bank.Domain.Interfaces;
 
 namespace Bank.Infrastructure.Repositories;
@@ -22,4 +23,6 @@ public class InMemoryAccountRepository : IAccountRepository
         if (index >= 0)
             _accounts[index] = account;
     }
+
+    public int Count() => _accounts.Count;
 }

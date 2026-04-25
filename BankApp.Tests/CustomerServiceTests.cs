@@ -4,6 +4,7 @@
 
 using Bank.Application.Services;
 using Bank.Domain.Enums;
+using Bank.Infrastructure.Factories;
 using Bank.Infrastructure.Repositories;
 
 namespace Bank.Tests;
@@ -23,7 +24,9 @@ public class CustomerServiceTests
         var accountRepo = new InMemoryAccountRepository();
         var transactionRepo = new InMemoryTransactionRepository();
         var customerService = new CustomerService(customerRepo, accountRepo);
-        var accountService = new AccountService(accountRepo, transactionRepo);
+        var accountRuleFactory = new AccountRuleFactory();
+        var accountRuleService = new AccountRuleService(accountRuleFactory, accountRepo);
+        var accountService = new AccountService(accountRepo, transactionRepo, accountRuleService);
         return (customerService, accountService);
     }
 
@@ -139,5 +142,49 @@ public class CustomerServiceTests
         var all = service.GetAllCustomers();
 
         Assert.Equal(2, all.Count);
+    }
+
+    [Fact]
+    public void GetCustomerSelections_ReturnsMappedCustomers()
+    {
+        var service = CreateService();
+        var customer = service.CreateCustomer("Anna", "Svensson", "anna@test.com");
+        var result = service.GetCustomerSelections();
+
+        Assert.Single(result);
+
+        var dto = result.First();
+        Assert.Equal(customer.Id, dto.Id);
+        Assert.Equal("Anna Svensson", dto.FullName);
+    }
+
+    [Fact]
+    public void GetCustomerOverview_ReturnsCustomerWithAccounts()
+    {
+        var (customerService, accountService) = CreateServicesWithAccounts();
+        var customer = customerService.CreateCustomer("Anna", "Svensson", "anna@test.com");
+        accountService.CreateAccount(customer.Id, AccountType.Savings, "ACC-001");
+        accountService.CreateAccount(customer.Id, AccountType.Checking, "ACC-002");
+
+        var result = customerService.GetCustomerOverview(customer.Id);
+
+        Assert.NotNull(result);
+        Assert.Equal(customer.Id, result.Id);
+        Assert.Equal("Anna Svensson", result.FullName);
+        Assert.Equal(2, result.Accounts.Count);
+        Assert.Contains(result.Accounts, a => a.AccountNumber == "ACC-001");
+        Assert.Contains(result.Accounts, a => a.AccountNumber == "ACC-002");
+    }
+
+    [Fact]
+    public void GetCustomerOverview_NoAccounts_ReturnsEmptyAccountList()
+    {
+        var (customerService, _) = CreateServicesWithAccounts();
+        var customer = customerService.CreateCustomer("Anna", "Svensson", "anna@test.com");
+
+        var result = customerService.GetCustomerOverview(customer.Id);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Accounts);
     }
 }

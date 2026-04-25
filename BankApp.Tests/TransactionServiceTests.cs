@@ -5,6 +5,7 @@
 using Bank.Application.Services;
 using Bank.Domain.Entities;
 using Bank.Domain.Enums;
+using Bank.Infrastructure.Factories;
 using Bank.Infrastructure.Repositories;
 
 namespace Bank.Tests;
@@ -15,7 +16,9 @@ public class TransactionServiceTests
     {
         var accountRepo = new InMemoryAccountRepository();
         var transactionRepo = new InMemoryTransactionRepository();
-        var accountService = new AccountService(accountRepo, transactionRepo);
+        var accountRuleFactory = new AccountRuleFactory();
+        var accountRuleService = new AccountRuleService(accountRuleFactory, accountRepo);
+        var accountService = new AccountService(accountRepo, transactionRepo, accountRuleService);
         var transactionService = new TransactionService(transactionRepo);
         return (transactionService, accountService, transactionRepo);
     }

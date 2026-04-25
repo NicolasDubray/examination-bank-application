@@ -3,7 +3,6 @@ using System.Data;
 using Bank.Domain.Enums;
 using Bank.Domain.Interfaces;
 using Bank.Domain.Rules;
-
 namespace Bank.Application.Services;
 
 public class AccountRuleService

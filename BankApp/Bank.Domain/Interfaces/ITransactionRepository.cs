@@ -8,4 +8,5 @@ public interface ITransactionRepository
     List<Transaction> GetByAccountId(int accountId);
     List<Transaction> GetAll();
     void Add(Transaction transaction);
+    int Count();
 }
