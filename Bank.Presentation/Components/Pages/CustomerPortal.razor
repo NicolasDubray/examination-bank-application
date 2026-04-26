@@ -20,7 +20,7 @@
             <tr>
                 <th>Account</th>
                 <th>Type</th>
-                <th class="amount">Balance</th>
+                <th class="numbers-header">Balance</th>
             </tr>
         </thead>
         <tbody>
@@ -36,7 +36,6 @@
             }
         </tbody>
     </table>
-    <hr/>  
 
     <!-- Account details card -->
     @if (accountDetails is not null)
@@ -59,64 +58,71 @@
                 <span class="label">Withdrawal Limit</span>
                 <span class="amount">@accountDetails.WithdrawalLimit</span>
             </div>
-        </div>
-        <hr/>
+        </div>        
     }
 
     <!-- Transaction filter controls -->
-    <div class="transaction-filter-controls">
-        <label>
-            From:
-            <input type="date" @bind="fromDateFilterSetting" />
-        </label>
-        <label>
-            To:
-            <input type="date" @bind="toDateFilterSetting" />
-        </label>
-        <label>
-            Type:
-            <select @bind="transactionTypeFilterSetting">
-                <option value="">All</option>
-                <option value="Deposit">Deposit</option>
-                <option value="Withdrawal">Withdrawal</option>
-                <option value="Transfer">Transfer</option>
-            </select>
-        </label>
-        <label>
-            <input type="checkbox" @bind="shouldOrderTransactionsByDescending" />
-            Newest first
-        </label>
-        <button @onclick="LoadTransactions">
-            Apply filters
-        </button>
-    </div>
-
-    <!-- Transactions table -->
-    @if (transactionsForSelectedAccount is not null)
+    if (selectedAccountId is not null)
     {
-        <table class="transactions-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Description</th>                    
-                    <th>Amount</th>
-                    <th>Type</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var t in transactionsForSelectedAccount)
-                {                    
+        @if (transactionsForSelectedAccount is not null)
+        {
+            <div class="transaction-filter-controls">
+                <label>
+                    From:
+                    <input type="date" @bind="fromDateFilterSetting" />
+                </label>
+                <label>
+                    To:
+                    <input type="date" @bind="toDateFilterSetting" />
+                </label>
+                <label>
+                    Type:
+                    <select @bind="transactionTypeFilterSetting">
+                        <option value="">All</option>
+                        <option value="Deposit">Deposit</option>
+                        <option value="Withdrawal">Withdrawal</option>
+                        <option value="Transfer">Transfer</option>
+                    </select>
+                </label>
+                <label>
+                    <input type="checkbox" @bind="shouldOrderTransactionsByDescending" />
+                    Newest first
+                </label>
+                <button @onclick="LoadTransactions">
+                    Apply filters
+                </button>
+            </div>
+
+            <!-- Transactions table -->
+
+            <table class="transactions-table">
+                <thead>
                     <tr>
-                        <td>@t.Date.ToString("yyyy-MM-dd")</td>
-                        <td>@t.Description</td>                        
-                        <td class="amount">
-                            @(t.Amount >= 0 ? "+" : "-")@Math.Abs(t.Amount)
-                        </td>
-                        <td>@t.Type</td>
+                        <th>Date</th>
+                        <th>Description</th>                    
+                        <th>Amount</th>
+                        <th>Type</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var t in transactionsForSelectedAccount)
+                    {
+                        <tr>
+                            <td>@t.Date.ToString("yyyy-MM-dd")</td>
+                            <td>@t.Description</td>                        
+                            <td class="amount">
+                                @(t.Amount >= 0 ? "+" : "-")@Math.Abs(t.Amount)
+                            </td>
+                            <td>@t.Type</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No transactions to display.</p>
+        }
     }
 }
 
