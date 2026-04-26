@@ -9,8 +9,11 @@
     }
 
     th {
-        text-align: left;
         background-color: whitesmoke;
+
+        &.numbers-header {
+            text-align: right;
+        }
     }
 
     .account-row:hover {
@@ -30,7 +33,7 @@
     padding: 1rem;
     border-radius: 0.5rem;
     background-color: whitesmoke;
-    margin-top: 0.75rem;
+    margin-top: 1rem;
 
     .detail-row {
         display: grid;
@@ -39,7 +42,7 @@
         padding: 0.375rem 0;
         border-bottom: 1px solid gainsboro;
 
-        :last-child {
+        &:last-child {
             border-bottom: none;
         }
     }
@@ -58,6 +61,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
+    margin-top: 1rem;
     margin-bottom: 0.75rem;
     align-items: center;
 }
@@ -77,13 +81,10 @@
         background-color: whitesmoke;
         text-align: left;
     }
-
-    .amount {
-        text-align: right;
-    }
 }
 
 .amount {
+    text-align: right;
     font-family: monospace;
     font-variant-numeric: tabular-nums;
 }
